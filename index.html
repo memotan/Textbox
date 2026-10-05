@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f7f8fa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101216" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="漢字チェック">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>漢字チェック</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Layout: 1画面の入力欄だけ。上に小さなバー、残りはすべて入力エリア。 */
+  :root {
+    --bg: #f7f8fa;
+    --fg: #14181f;
+    --muted: #667085;
+    --accent: #2f5bd8;
+    --line: #d9dde4;
+    --font-ui: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    --font-text: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101216;
+      --fg: #eceef2;
+      --muted: #8b93a1;
+      --accent: #8aa6f7;
+      --line: #272b33;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #101216;
+    --fg: #eceef2;
+    --muted: #8b93a1;
+    --accent: #8aa6f7;
+    --line: #272b33;
+    color-scheme: dark;
+  }
+
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-ui);
+    margin: 0;
+    padding-inline: 16px;
+    padding-block: 0;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-block: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  .name {
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .clear {
+    font: inherit;
+    font-size: 14px;
+    color: var(--accent);
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 8px 16px;
+    min-height: 40px;
+    cursor: pointer;
+  }
+  .clear:active { background: var(--line); }
+  .clear:focus-visible, .field:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .field {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    box-sizing: border-box;
+    border: 0;
+    resize: none;
+    background: var(--bg);
+    color: var(--fg);
+    caret-color: var(--accent);
+    font-family: var(--font-text);
+    font-size: 28px;
+    line-height: 1.7;
+    padding-block: 16px;
+    outline: none;
+  }
+  /* プレースホルダー（14文字）を1行に収めるため、画面幅に合わせて縮める。
+     入力した文字は28pxのまま。ライブ版（1790925115-2f94）をもとに反映済み。 */
+  .field::placeholder {
+    color: var(--muted);
+    opacity: 0.7;
+    font-size: min(28px, 5.4vw);
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+  .field:focus-visible { outline: none; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <span class="name">漢字チェック</span>
+  <button class="clear" id="clear" type="button">消去</button>
+</div>
+<textarea id="field" class="field" lang="ja" rows="1"
+  placeholder="ここに入力して変換候補を確認"
+  spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off"
+  enterkeyhint="done"></textarea>
+
+<script>
+  var field = document.getElementById('field');
+  var clearBtn = document.getElementById('clear');
+
+  function focusField() {
+    try { field.focus({ preventScroll: true }); } catch (e) { field.focus(); }
+  }
+
+  // 開いたらすぐ入力できる状態にする
+  focusField();
+  window.addEventListener('pageshow', focusField);
+
+  // 画面のどこをタップしても入力欄にフォーカスを戻す（キーボードが出ない場合の保険）
+  document.body.addEventListener('pointerdown', function (e) {
+    if (e.target === clearBtn) return;
+    if (e.target !== field) { e.preventDefault(); focusField(); }
+  });
+
+  clearBtn.addEventListener('click', function () {
+    field.value = '';
+    focusField();
+  });
+</script>
+
+<script>
+  // Service Worker登録（オフライン対応・インストール条件）
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () {});
+    });
+  }
+</script>
+</body>
+</html>
