@@ -1,5 +1,5 @@
 // 漢字チェック: オフラインでも開けるようにする最小のService Worker
-const CACHE = 'kanji-check-v1';
+const CACHE = 'kanji-check-v2';
 const ASSETS = [
   './',
   './index.html',

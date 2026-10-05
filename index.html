@@ -83,6 +83,7 @@
     min-height: 40px;
     cursor: pointer;
   }
+  .btns { display: flex; gap: 8px; }
   .clear:active { background: var(--line); }
   .clear:focus-visible, .field:focus-visible {
     outline: 2px solid var(--accent);
@@ -120,7 +121,10 @@
 <body>
 <div class="bar">
   <span class="name">漢字チェック</span>
-  <button class="clear" id="clear" type="button">消去</button>
+  <span class="btns">
+    <button class="clear" id="install" type="button" hidden>インストール</button>
+    <button class="clear" id="clear" type="button">消去</button>
+  </span>
 </div>
 <textarea id="field" class="field" lang="ja" rows="1"
   placeholder="ここに入力して変換候補を確認"
@@ -130,6 +134,7 @@
 <script>
   var field = document.getElementById('field');
   var clearBtn = document.getElementById('clear');
+  var installBtn = document.getElementById('install');
 
   function focusField() {
     try { field.focus({ preventScroll: true }); } catch (e) { field.focus(); }
@@ -141,7 +146,7 @@
 
   // 画面のどこをタップしても入力欄にフォーカスを戻す（キーボードが出ない場合の保険）
   document.body.addEventListener('pointerdown', function (e) {
-    if (e.target === clearBtn) return;
+    if (e.target === clearBtn || e.target === installBtn) return;
     if (e.target !== field) { e.preventDefault(); focusField(); }
   });
 
@@ -149,6 +154,25 @@
     field.value = '';
     focusField();
   });
+</script>
+
+<script>
+  // インストール案内: Chromeがインストール可能と判断したときだけボタンを出す
+  var deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.hidden = false;
+  });
+  installBtn.addEventListener('click', function () {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function () {
+      deferredPrompt = null;
+      installBtn.hidden = true;
+    });
+  });
+  window.addEventListener('appinstalled', function () { installBtn.hidden = true; });
 </script>
 
 <script>
