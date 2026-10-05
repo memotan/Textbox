@@ -84,6 +84,7 @@
     cursor: pointer;
   }
   .btns { display: flex; gap: 8px; }
+  .diag { font-size: 11px; color: var(--muted); padding-block: 6px 0; }
   .clear:active { background: var(--line); }
   .clear:focus-visible, .field:focus-visible {
     outline: 2px solid var(--accent);
@@ -126,6 +127,7 @@
     <button class="clear" id="clear" type="button">消去</button>
   </span>
 </div>
+<div id="diag" class="diag" hidden></div>
 <textarea id="field" class="field" lang="ja" rows="1"
   placeholder="ここに入力して変換候補を確認"
   spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off"
@@ -173,6 +175,21 @@
     });
   });
   window.addEventListener('appinstalled', function () { installBtn.hidden = true; });
+
+  // 診断表示（アプリとして開いているときは出さない）。インストールできたら不要になるので後で消します。
+  var diag = document.getElementById('diag');
+  var standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  if (!standalone) {
+    diag.hidden = false;
+    var base = 'v3 / ブラウザ表示 / ';
+    diag.textContent = base + 'インストール可否を判定中…';
+    window.addEventListener('beforeinstallprompt', function () {
+      diag.textContent = base + 'インストール可能: 右上のボタンから';
+    });
+    setTimeout(function () {
+      if (!deferredPrompt) diag.textContent = base + 'Chromeがインストール不可と判断、またはインストール済み';
+    }, 5000);
+  }
 </script>
 
 <script>

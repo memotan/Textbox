@@ -1,5 +1,5 @@
 // 漢字チェック: オフラインでも開けるようにする最小のService Worker
-const CACHE = 'kanji-check-v2';
+const CACHE = 'kanji-check-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -27,6 +27,17 @@ self.addEventListener('activate', (e) => {
 // キャッシュ優先。なければネットワーク（Googleフォントなども実行時にキャッシュ）
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
+  // ページ本体はネットワーク優先（更新がすぐ反映されるように）。失敗時はキャッシュ。
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request).then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE).then((c) => c.put('./index.html', copy));
+        return res;
+      }).catch(() => caches.match('./index.html'))
+    );
+    return;
+  }
   e.respondWith(
     caches.match(e.request).then((hit) => {
       if (hit) return hit;
